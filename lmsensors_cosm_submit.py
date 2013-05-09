@@ -6,7 +6,18 @@ It is using cosm.cfg which is JSON dictionary with following fields:
 
 {
 "key":"your key"
-"feed":123
+"feed":123,
+ "chips": {
+          "it8718-*":
+          {
+                "fan1":1,
+                "fan2":2,
+                "fan3":3,
+                "temp1":101,
+                "temp2":102,
+                "temp3":103
+          }
+ }
 }
 """
 
@@ -91,6 +102,7 @@ def main():
         
     feed = cfg["feed"]
     key  = cfg["key"]
+    chips = cfg["chips"]
     log.info("Using feed %s" % feed)
 
     try:
@@ -101,12 +113,16 @@ def main():
         
     try:
 
+        data = ""
+        #  ISO 8601 date
+        ts = datetime.datetime.utcfromtimestamp(int(time.time())).isoformat('T')+"Z"
         try:
             for chip in sensors.iter_detected_chips():
-                if chip.match(Chip('it8718-*')):
-                    print '%s' % (chip)
-                    for feature in chip:
-                        print '  %s: %.2f' % (feature.label, feature.get_value())
+                for cname,cconf in chips.items():
+                    if chip.match(Chip(cname)):
+                        for feature in chip:
+                            if cconf.has_key(feature.label):
+                                print '%d:  %s: %.2f' % (cconf[feature.label], feature.label, feature.get_value())
         except Exception, ex:
             log.error("Error reading sensor values: %s" % ex )
             sys.exit(101)

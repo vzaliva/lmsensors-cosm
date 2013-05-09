@@ -1,8 +1,8 @@
 lmsensors-COSM
 ===========
 
-Simple script to feed Linux lmsensors data to COSM.com.
-Typical usage: to be regularly called from from cron(8).
+Simple script to feed Linux lmsensors data to COSM.com.  Typical usage
+is to be regularly called periodically from cron(8).
 
 Dependencies:
 ------------
@@ -14,5 +14,6 @@ Meta:
 -------------
 
 * Project Home: https://github.com/vzaliva/lmsensors-cosm
+* Sample feed: https://cosm.com/feeds/131106
 * Author: Vadim Zaliva <lord@crocodile.org>
 
