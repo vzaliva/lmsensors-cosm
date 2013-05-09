@@ -24,7 +24,6 @@ It is using cosm.cfg which is JSON dictionary with following fields:
 import json
 import sys
 import logging
-import time,datetime
 import string
 import getopt
 import cosm
@@ -67,8 +66,8 @@ def main():
         usage()
         sys.exit(2)
 
-    console = True # TODO change
-    debug_mode = True #TODO change
+    console = False
+    debug_mode = False
     cfg_fname = CFG_FILE
     
     for o, a in opts:
@@ -103,7 +102,6 @@ def main():
     feed = cfg["feed"]
     key  = cfg["key"]
     chips = cfg["chips"]
-    log.info("Using feed %s" % feed)
 
     try:
         sensors.init()
@@ -114,22 +112,24 @@ def main():
     try:
 
         data = ""
-        #  ISO 8601 date
-        ts = datetime.datetime.utcfromtimestamp(int(time.time())).isoformat('T')+"Z"
         try:
             for chip in sensors.iter_detected_chips():
                 for cname,cconf in chips.items():
                     if chip.match(Chip(cname)):
                         for feature in chip:
                             if cconf.has_key(feature.label):
-                                print '%d:  %s: %.2f' % (cconf[feature.label], feature.label, feature.get_value())
+                                log.debug('%d:  %s: %.2f' % (cconf[feature.label], feature.label, feature.get_value()))
+                                data = data + string.join([str(cconf[feature.label]), str(feature.get_value())],",")+"\r\n"
         except Exception, ex:
             log.error("Error reading sensor values: %s" % ex )
             sys.exit(101)
             
         try:
             if not debug_mode:
-                cosm.submit_datapoints(feed,ch,key,temps[ch])
+                log.info("Updating feed %s" % feed)
+                cosm.update_feed(feed,key,data)
+            else:
+                log.debug(data)
         except Exception, ex:
             log.error("Error sending to COSM: %s" % ex )
             sys.exit(102)
