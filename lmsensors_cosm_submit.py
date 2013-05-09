@@ -19,6 +19,12 @@ import getopt
 import cosm
 import sensors
 
+# Ugly as hell:
+if sensors.MAJOR_VERSION < 3:
+    from sensors.api3 import Chip
+else:
+    from sensors.api4 import Chip
+
 CFG_FILE="cosm.cfg"
 COSM_LOGFILE="cosm.log"
 
@@ -42,7 +48,7 @@ def read_config(cfg_fname):
 
 def main():
     global log
-    global debug_mode = True
+    global debug_mode
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'dcf:', [])
@@ -50,11 +56,9 @@ def main():
         usage()
         sys.exit(2)
 
-    console = False
-    debug_mode = False
+    console = True # TODO change
+    debug_mode = True #TODO change
     cfg_fname = CFG_FILE
-    data_fname = DATA_FILE
-    sleep_time = 0 # non zero means loop mode
     
     for o, a in opts:
         if o in ['-d']:
@@ -90,20 +94,30 @@ def main():
     log.info("Using feed %s" % feed)
 
     try:
+        sensors.init()
+    except Exception, ex:
+        log.error("Error initalizing libsensors: %s" % ex )
+        sys.exit(100)
+        
+    try:
+
         try:
-            sensors.init()
+            for chip in sensors.iter_detected_chips():
+                if chip.match(Chip('it8718-*')):
+                    print '%s' % (chip)
+                    for feature in chip:
+                        print '  %s: %.2f' % (feature.label, feature.get_value())
         except Exception, ex:
-            log.error("Error initializing sensors: %s" % ex )
-            sys.exit(200)
+            log.error("Error reading sensor values: %s" % ex )
+            sys.exit(101)
             
         try:
             if not debug_mode:
                 cosm.submit_datapoints(feed,ch,key,temps[ch])
         except Exception, ex:
             log.error("Error sending to COSM: %s" % ex )
-            sys.exit(100)
-        finally:
-                f.close()
+            sys.exit(102)
+            
     finally:
              sensors.cleanup()
     log.debug("Done")
