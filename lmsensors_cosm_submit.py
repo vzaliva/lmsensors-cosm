@@ -45,8 +45,9 @@ def usage():
 -c -- log to console instead of log file
 -d -- dry-run mode. No data submitted.
 -f <cfg file> -- config file name. Default is '%s'
+-l <log file> -- config file name. Default is '%s'
 
-"""  % (sys.argv[0],CFG_FILE)
+"""  % (sys.argv[0],CFG_FILE,COSM_LOGFILE)
 
 def read_config(cfg_fname):
     log.info("Reading config file %s" % cfg_fname)
@@ -61,7 +62,7 @@ def main():
     global debug_mode
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'dcf:', [])
+        opts, args = getopt.getopt(sys.argv[1:], 'dcf:l:', [])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -69,6 +70,7 @@ def main():
     console = False
     debug_mode = False
     cfg_fname = CFG_FILE
+    log_fname = COSM_LOGFILE
     
     for o, a in opts:
         if o in ['-d']:
@@ -77,6 +79,8 @@ def main():
             console = True
         elif o in ['-f']:
             cfg_fname = a
+        elif o in ['-l']:
+            log_fname = a
         else:
             usage()
             sys.exit(1)
@@ -90,7 +94,7 @@ def main():
         logging.basicConfig(level=log_level, format=log_format)
     else:
         logging.basicConfig(level=log_level, format=log_format,
-                            filename=COSM_LOGFILE, filemode='a')
+                            filename=log_fname, filemode='a')
     log = logging.getLogger('default')
 
     try:
